@@ -1,11 +1,8 @@
-const {
-  makeExecutableSchema,
-  addMockFunctionsToSchema
-} = require("graphql-tools");
+const { makeExecutableSchema } = require("graphql-tools");
 const { typeDefs } = require("../shared/schema");
 
-const schema = makeExecutableSchema({ typeDefs });
+const resolvers = require("./resolvers");
 
-addMockFunctionsToSchema({ schema });
+const schema = makeExecutableSchema({ typeDefs, resolvers });
 
 module.exports = schema;
