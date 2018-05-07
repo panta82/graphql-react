@@ -22,11 +22,7 @@ const ChannelList = ({ data: { loading, error, channels } }) => {
     return <p>{error.message}</p>;
   }
 
-  return (
-    <ul className="Item-list">
-      {channels.map(ch => <li key={ch.id}>{ch.name}</li>)}
-    </ul>
-  );
+  return <ul>{channels.map(ch => <li key={ch.id}>{ch.name}</li>)}</ul>;
 };
 
 const BoundChannelList = graphql(gql`
