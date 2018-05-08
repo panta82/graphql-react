@@ -4,10 +4,11 @@ import gql from "graphql-tag";
 
 import MessageList from "../messages/MessageList";
 import NotFound from "../NotFound";
+import ChannelPreview from "./ChannelPreview";
 
 const ChannelDetails = ({ data: { loading, error, channel }, match }) => {
   if (loading) {
-    return <p>Loading...</p>;
+    return <ChannelPreview channelId={match.params.channelId} />;
   }
 
   if (error) {
