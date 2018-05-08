@@ -58,6 +58,9 @@ div.channel {
 	padding-left: 30px;
 	font-size: 16px;
 }
+div.channel.optimistic {
+	color: rgba(255, 255, 255, 0.5);
+}
 
 div.channelsList input {
 	width: 200px;

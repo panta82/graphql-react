@@ -25,19 +25,31 @@ export class AddChannel extends Component {
       return;
     }
 
+    this.setState({
+      name: ""
+    });
+
     const mutateReq = {
       variables: {
         name: this.state.name
       },
-      refetchQueries: [{ query: channelListQuery }]
+      optimisticResponse: {
+        addChannel: {
+          name: this.state.name,
+          id: Math.random() * -10000000,
+          __typename: "Channel"
+        }
+      },
+      update: (store, { data: { addChannel } }) => {
+        // Mutate data in cache
+        const data = store.readQuery({ query: channelListQuery });
+        data.channels.push(addChannel);
+        store.writeQuery({ query: channelListQuery, data });
+      }
     };
 
     this.props.mutate(mutateReq).then(
-      () => {
-        this.setState({
-          name: ""
-        });
-      },
+      () => {},
       err => {
         alert(err.message);
       }

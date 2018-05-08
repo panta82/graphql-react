@@ -14,8 +14,9 @@ export const ChannelList = ({ data: { loading, error, channels } }) => {
   }
 
   const channelItems = channels.map(ch => {
+    const className = `channel ${ch.id < 0 ? "optimistic" : ""}`;
     return (
-      <div className="channel" key={ch.id}>
+      <div className={className} key={ch.id}>
         {ch.name}
       </div>
     );

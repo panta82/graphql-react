@@ -22,6 +22,9 @@ module.exports = {
   },
   Mutation: {
     addChannel: (root, args) => {
+      // Use for testing optimistic writes
+      //throw new Error("Test error");
+
       const newChannel = Channel.create(nextId, args.name);
       channels.push(newChannel);
       nextId++;
