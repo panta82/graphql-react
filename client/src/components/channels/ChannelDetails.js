@@ -1,8 +1,23 @@
 import React from "react";
-import MessageList from "../messages/MessageList";
+import { graphql } from "react-apollo/index";
+import gql from "graphql-tag";
 
-const ChannelDetails = () => {
-  const channel = { name: "Test", messages: [] };
+import MessageList from "../messages/MessageList";
+import NotFound from "../NotFound";
+
+const ChannelDetails = ({ data: { loading, error, channel }, match }) => {
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>{error.message}</p>;
+  }
+
+  if (!channel) {
+    return <NotFound />;
+  }
+
   return (
     <div>
       <div className="channelName">{channel.name}</div>
@@ -11,4 +26,25 @@ const ChannelDetails = () => {
   );
 };
 
-export default ChannelDetails;
+export const channelDetailsQuery = gql`
+  query ChannelDetailsQuery($channelId: ID!) {
+    channel(id: $channelId) {
+      id
+      name
+      messages {
+        id
+        text
+      }
+    }
+  }
+`;
+
+export default graphql(channelDetailsQuery, {
+  options: props => {
+    return {
+      variables: {
+        channelId: props.match.params.channelId
+      }
+    };
+  }
+})(ChannelDetails);
