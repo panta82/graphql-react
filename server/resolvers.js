@@ -36,13 +36,17 @@ const channels = [
 let nextChannelId = 3;
 let nextMessageId = 3;
 
+function getChannel(id) {
+  return channels.find(ch => String(ch.id) === String(id)) || null;
+}
+
 module.exports = {
   Query: {
     channels: () => {
       return channels;
     },
     channel: (root, { id }) => {
-      return channels.find(ch => String(ch.id) === String(id));
+      return getChannel(id);
     }
   },
   Mutation: {
@@ -54,6 +58,17 @@ module.exports = {
       channels.push(newChannel);
       nextChannelId++;
       return newChannel;
+    },
+    addMessage: (root, { message }) => {
+      const channel = getChannel(message.channelId);
+      if (!channel) {
+        throw new Error(`Channel doesn't exist`);
+      }
+
+      const newMessage = Message.create(nextMessageId, message.text);
+      nextMessageId++;
+      channel.messages.push(newMessage);
+      return newMessage;
     }
   }
 };

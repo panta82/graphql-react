@@ -15,6 +15,11 @@ const typeDefs = gql`
     text: String
   }
 
+  input MessageInput {
+    channelId: ID!
+    text: String
+  }
+
   type Query {
     channels: [Channel]
     channel(id: ID!): Channel
@@ -22,6 +27,7 @@ const typeDefs = gql`
 
   type Mutation {
     addChannel(name: String!): Channel
+    addMessage(message: MessageInput!): Message
   }
 `;
 

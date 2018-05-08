@@ -2,10 +2,13 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { graphql } from "react-apollo/index";
 import gql from "graphql-tag";
+import { withRouter } from "react-router-dom";
+import { channelDetailsQuery } from "../channels/ChannelDetails";
 
 export class AddMessage extends Component {
   static propTypes = {
-    mutate: PropTypes.func
+    mutate: PropTypes.func,
+    match: PropTypes.object
   };
 
   constructor(props) {
@@ -18,6 +21,44 @@ export class AddMessage extends Component {
 
   onSubmit = e => {
     e.preventDefault();
+
+    const text = this.state.text;
+    this.setState({
+      text: ""
+    });
+
+    const channelId = this.props.match.params.channelId;
+
+    this.props.mutate({
+      variables: {
+        message: {
+          channelId,
+          text
+        }
+      },
+      optimisticResponse: {
+        addMessage: {
+          text,
+          id: Math.round(Math.random() * -100000000)
+        }
+      },
+      update: (store, { data: { addMessage } }) => {
+        const data = store.readQuery({
+          query: channelDetailsQuery,
+          variables: {
+            channelId
+          }
+        });
+        data.channel.messages.push(addMessage);
+        store.writeQuery({
+          query: channelDetailsQuery,
+          variables: {
+            channelId
+          },
+          data
+        });
+      }
+    });
   };
 
   render() {
@@ -36,12 +77,12 @@ export class AddMessage extends Component {
 }
 
 const BoundAddMessage = graphql(gql`
-  mutation addChannel($name: String!) {
-    addChannel(name: $name) {
+  mutation addMessage($message: MessageInput!) {
+    addMessage(message: $message) {
       id
-      name
+      text
     }
   }
-`)(AddMessage);
+`)(withRouter(AddMessage));
 
 export default BoundAddMessage;
