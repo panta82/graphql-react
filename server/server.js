@@ -3,8 +3,12 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { graphqlExpress, graphiqlExpress } = require("graphql-server-express");
+const { execute, subscribe } = require("graphql");
+const { SubscriptionServer } = require("subscriptions-transport-ws");
 
 const schema = require("./schema");
+
+const port = process.env.PORT || 8000;
 
 const app = express();
 
@@ -25,13 +29,24 @@ app.use(
 app.use(
   "/graphiql",
   graphiqlExpress({
-    endpointURL: "/graphql"
+    endpointURL: "/graphql",
+    subscriptionsEndpoint: `ws://localhost:${port}/subscriptions`
   })
 );
-
-const port = process.env.PORT || 8000;
 
 const server = http.createServer(app);
 server.listen(port, () => {
   console.log(`Listening on port ${port}`);
+
+  SubscriptionServer.create(
+    {
+      execute,
+      subscribe,
+      schema
+    },
+    {
+      server,
+      path: "/subscriptions"
+    }
+  );
 });

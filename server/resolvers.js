@@ -1,29 +1,6 @@
-class Channel {
-  constructor(source) {
-    this.id = null;
-    this.name = null;
-    this.messages = [];
+const { PubSub, withFilter } = require("graphql-subscriptions");
 
-    Object.assign(this, source);
-  }
-
-  static create(id, name, messages = []) {
-    return new Channel({ id, name, messages });
-  }
-}
-
-class Message {
-  constructor(source) {
-    this.id = null;
-    this.text = null;
-
-    Object.assign(this, source);
-  }
-
-  static create(id, text) {
-    return new Message({ id, text });
-  }
-}
+const { Channel, Message } = require("./types");
 
 const channels = [
   Channel.create(1, "soccer", [
@@ -40,15 +17,19 @@ function getChannel(id) {
   return channels.find(ch => String(ch.id) === String(id)) || null;
 }
 
+const pubSub = new PubSub();
+
 module.exports = {
   Query: {
     channels: () => {
       return channels;
     },
+
     channel: (root, { id }) => {
       return getChannel(id);
     }
   },
+
   Mutation: {
     addChannel: (root, args) => {
       // Use for testing optimistic writes
@@ -59,16 +40,34 @@ module.exports = {
       nextChannelId++;
       return newChannel;
     },
-    addMessage: (root, { message }) => {
-      const channel = getChannel(message.channelId);
+
+    addMessage: (root, { message: { channelId, text } }) => {
+      const channel = getChannel(channelId);
       if (!channel) {
         throw new Error(`Channel doesn't exist`);
       }
 
-      const newMessage = Message.create(nextMessageId, message.text);
+      const newMessage = Message.create(nextMessageId, text);
       nextMessageId++;
       channel.messages.push(newMessage);
+
+      pubSub.publish(`messageAdded`, {
+        messageAdded: newMessage,
+        channelId
+      });
+
       return newMessage;
+    }
+  },
+
+  Subscription: {
+    messageAdded: {
+      subscribe: withFilter(
+        () => pubSub.asyncIterator(`messageAdded`),
+        (payload, variables) => {
+          return String(payload.channelId) === String(variables.channelId);
+        }
+      )
     }
   }
 };
