@@ -1,9 +1,11 @@
 import React, { Component } from "react";
 import { ApolloProvider } from "react-apollo";
 import { ApolloClient } from "apollo-client";
-import { createHttpLink } from "apollo-link-http";
+import { split } from "apollo-link";
+import { HttpLink } from "apollo-link-http";
+import { WebSocketLink } from "apollo-link-ws";
 import { InMemoryCache } from "apollo-cache-inmemory";
-import { toIdValue } from "apollo-utilities";
+import { toIdValue, getMainDefinition } from "apollo-utilities";
 import { BrowserRouter, Link, Route, Switch } from "react-router-dom";
 
 import BoundChannelList from "./channels/ChannelList";
@@ -18,10 +20,26 @@ function dataIdFromObject(ob) {
   return null;
 }
 
+const httpLink = new HttpLink({
+  uri: "http://localhost:8000/graphql"
+});
+
+const wsLink = new WebSocketLink({
+  uri: "ws://localhost:8000/subscriptions",
+  options: {
+    reconnect: true
+  }
+});
+
 const client = new ApolloClient({
-  link: createHttpLink({
-    uri: "http://localhost:8000/graphql"
-  }),
+  link: split(
+    ({ query }) => {
+      const { kind, operation } = getMainDefinition(query);
+      return kind === "OperationDefinition" && operation === "subscription";
+    },
+    wsLink,
+    httpLink
+  ),
   cache: new InMemoryCache({
     cacheRedirects: {
       Query: {

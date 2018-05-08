@@ -49,7 +49,14 @@ export class AddMessage extends Component {
             channelId
           }
         });
-        data.channel.messages.push(addMessage);
+
+        const duplicate = data.channel.messages.find(
+          msg => msg.id === addMessage.id
+        );
+        if (!duplicate) {
+          data.channel.messages.push(addMessage);
+        }
+
         store.writeQuery({
           query: channelDetailsQuery,
           variables: {
